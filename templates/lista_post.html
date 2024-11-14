@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Lista post</title>
+        <h1>Lista Posts</h1>
+    </head>
+    <body>
+        {% for object in object_list %}
+            <h1>{{object.title}}</h1>
+            <p>{{object.content|truncatewords:50}}</p>
+        {% endfor %}
+    </body>
+</html>
