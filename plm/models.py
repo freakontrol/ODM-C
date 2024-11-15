@@ -45,7 +45,7 @@ class Part(models.Model):
                     original_part.revision != self.revision):
                 raise ValueError("Direct editing of category, item_number, variant, and revision is not allowed for existing parts.")
         else:
-            if not Category:
+            if not self.category:
                 raise ValueError("Part Category undefined")
             if not self.item_number:
                 self.create_new_item()
@@ -63,6 +63,8 @@ class Part(models.Model):
     def create_new_item(self, category=None):
         if category is not None:
             self.category = category
+        elif not self.category:
+            raise ValueError("Part Category undefined")
         last_part = Part.objects.filter(category=self.category).order_by('-item_number').first()
         if last_part:
             self.item_number = last_part.item_number + 1
@@ -73,6 +75,8 @@ class Part(models.Model):
     def create_new_variant(self, category=None, item_number=None):
         if category is not None:
             self.category = category
+        elif not self.category:
+            raise ValueError("Part Category undefined")
         if item_number is not None:
             self.item_number = item_number
         last_part = Part.objects.filter(category=self.category, item_number=self.item_number).order_by('-variant').first()
@@ -84,6 +88,8 @@ class Part(models.Model):
     def create_new_revision(self, category=None, item_number=None, variant=None):
         if category is not None:
             self.category = category
+        elif not self.category:
+            raise ValueError("Part Category undefined")
         if item_number is not None:
             self.item_number = item_number
         if variant is not None:
