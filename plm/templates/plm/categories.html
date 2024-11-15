@@ -1,0 +1,26 @@
+<!-- categories.html -->
+{% extends 'plm/base.html' %}
+
+{% block title %}Categories - PLM{% endblock %}
+
+{% block content %}
+  <h1>Part Categories</h1>
+  {% include "plm/_table.html" with data=part_categories %}
+
+  <h2>Add New Part Category</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ part_category_form.as_p }}
+    <input type="submit" value="Add Part Category">
+  </form>
+
+  <h1>Document Categories</h1>
+  {% include "plm/_table.html" with data=document_categories %}
+
+  <h2>Add New Document Category</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ document_category_form.as_p }}
+    <input type="submit" value="Add Document Category">
+  </form>
+{% endblock %}

@@ -1,0 +1,20 @@
+<!-- _table.html -->
+<table>
+    <thead>
+      <tr>
+        {% for field in data.0._meta.fields %}
+          <th>{{ field.verbose_name }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in data %}
+        <tr>
+          {% for field in item._meta.fields %}
+            <td>{{ item|get_field_display:field }}</td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  
