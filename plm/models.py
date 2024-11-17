@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 
 class Category(models.Model):
     id = models.AutoField(primary_key=True)
@@ -33,77 +34,120 @@ class Part(models.Model):
     revision = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     image = models.BinaryField(null=True, blank=True)
 
+    class Meta:
+        unique_together = ('category', 'item_number', 'variant', 'revision')
+
     def __str__(self):
         return self.internal_part_number
 
     def save(self, *args, **kwargs):
-        if not self._state.adding:  # Check if the instance is being created or updated
+        self.full_clean()
+        super().save(*args, **kwargs)
+    def clean(self):
+        fields = [self.item_number, self.variant, self.revision]
+        if not all(field is None or field >= 1 for field in fields):
+            raise ValidationError("Fields item_number, variant, and revision must be greater than or equal to 1.")
+        if not self._state.adding:
             original_part = Part.objects.get(pk=self.pk)
             if (original_part.category != self.category or
                     original_part.item_number != self.item_number or
                     original_part.variant != self.variant or
-                    original_part.revision != self.revision):
-                raise ValueError("Direct editing of category, item_number, variant, and revision is not allowed for existing parts.")
-        else:
-            if not self.category:
-                raise ValueError("Part Category undefined")
-            if not self.item_number:
-                self.create_new_item()
-            if not self.variant:
-                self.create_new_variant()
-            if not self.revision:
-                self.create_new_revision()
-            self._update_internal_part_number()
-        super().save(*args, **kwargs)
+                    original_part.revision != self.revision or
+                    original_part.internal_part_number != self.internal_part_number):
+                raise ValueError("Direct editing of category, item_number, variant, revision and ipn is not allowed for existing parts.")
+            if original_part.released is True and self.released is not False:
+                raise ValidationError("Cannot modify the part because it has already been released.")
 
-    def clean(self):
-        if self.item_number < 1 or self.variant < 1 or self.revision < 1:
-            raise ValidationError("Fields item_number, variant, and revision must be greater than or equal to 1.")
-
-    def create_new_item(self, category=None):
+    def create_new_item(self, category=None, description=None, purchase_option=None, repository_link=None, storage_code=None):
         if category is not None:
             self.category = category
         elif not self.category:
             raise ValueError("Part Category undefined")
+
         last_part = Part.objects.filter(category=self.category).order_by('-item_number').first()
         if last_part:
             self.item_number = last_part.item_number + 1
         else:
             self.item_number = 1
+
         self.variant = 1
         self.revision = 1
-    def create_new_variant(self, category=None, item_number=None):
+
+        if description is not None:
+            self.description = description
+        if purchase_option is not None:
+            self.purchase_option = purchase_option
+        if repository_link is not None:
+            self.repository_link = repository_link
+        if storage_code is not None:
+            self.storage_code = storage_code
+
+        self._update_internal_part_number()
+    def create_new_variant(self, category=None, item_number=None, description=None, purchase_option=None, repository_link=None, storage_code=None):
         if category is not None:
             self.category = category
         elif not self.category:
             raise ValueError("Part Category undefined")
+
         if item_number is not None:
             self.item_number = item_number
+
         last_part = Part.objects.filter(category=self.category, item_number=self.item_number).order_by('-variant').first()
         if last_part:
             self.variant = last_part.variant + 1
         else:
             self.variant = 1
+
         self.revision = 1
-    def create_new_revision(self, category=None, item_number=None, variant=None):
+
+        if description is not None:
+            self.description = description
+        if purchase_option is not None:
+            self.purchase_option = purchase_option
+        if repository_link is not None:
+            self.repository_link = repository_link
+        if storage_code is not None:
+            self.storage_code = storage_code
+
+        self._update_internal_part_number()
+    def create_new_revision(self, category, item_number, variant, description=None, purchase_option=None, repository_link=None, storage_code=None):
         if category is not None:
             self.category = category
         elif not self.category:
             raise ValueError("Part Category undefined")
+
         if item_number is not None:
             self.item_number = item_number
+        elif not self.item_number:
+            raise ValueError("Item Number undefined")
+
         if variant is not None:
             self.variant = variant
+        elif not self.variant:
+            raise ValueError("Variant undefined")
+
         last_part = Part.objects.filter(category=self.category, item_number=self.item_number, variant=self.variant).order_by('-revision').first()
         if last_part:
             self.revision = last_part.revision + 1
         else:
             self.revision = 1
+
+        # Set optional attributes directly
+        if description is not None:
+            self.description = description
+        if purchase_option is not None:
+            self.purchase_option = purchase_option
+        if repository_link is not None:
+            self.repository_link = repository_link
+        if storage_code is not None:
+            self.storage_code = storage_code
+
+        self._update_internal_part_number()
     def _update_internal_part_number(self):
         item_number_str = str(self.item_number).zfill(3)
         variant_str = str(int(self.variant)).zfill(2)
         revision_str = str(int(self.revision)).zfill(2)
-        self.internal_part_number = f'HW-{self.category}-{item_number_str}-v{variant_str}r{revision_str}'
+        self.internal_part_number = f'HW-{self.category}{item_number_str}-v{variant_str}r{revision_str}'
 
 class Manufacturer(models.Model):
     id = models.AutoField(primary_key=True)
@@ -118,6 +162,7 @@ class PurchaseOption(models.Model):
     manufacturer_code = models.CharField(max_length=255, null=True, blank=True)
     datasheet = models.CharField(max_length=255, null=True, blank=True)
     obsolete = models.BooleanField(default=False)
+
 
 class Container(models.Model):
     id = models.AutoField(primary_key=True)
