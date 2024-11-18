@@ -1,6 +1,6 @@
 # admin.py
 from django.contrib import admin
-from .models import PartCategory, DocumentCategory, Part, Manufacturer, PurchaseOption, Container, Document, PartDocument
+from .models import PartCategory, DocumentCategory, Part, Manufacturer, PurchaseOption, Container, Document
 
 @admin.register(PartCategory)
 class PartCategoryAdmin(admin.ModelAdmin):
@@ -30,6 +30,6 @@ class ContainerAdmin(admin.ModelAdmin):
 class DocumentAdmin(admin.ModelAdmin):
     list_display = ('document_number', 'description', 'checked', 'category', 'obsolete')
 
-@admin.register(PartDocument)
-class PartDocumentAdmin(admin.ModelAdmin):
-    list_display = ('part', 'document')
+# @admin.register(PartDocument)
+# class PartDocumentAdmin(admin.ModelAdmin):
+#     list_display = ('part', 'document')

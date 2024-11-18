@@ -3,15 +3,8 @@ from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from django.shortcuts import render
 from django.http import JsonResponse
-from .models import PartCategory, DocumentCategory, Part, Manufacturer, PurchaseOption, Container, Document, PartDocument
-from .serializers import PartCategorySerializer, DocumentCategorySerializer, PartSerializer, ManufacturerSerializer, PurchaseOptionSerializer, ContainerSerializer, DocumentSerializer, PartDocumentSerializer
-
-@api_view(['GET'])
-def apiOverview(request):
-    api_urls = {
-        'Parts':'/parts/'
-    }
-    return Response("API BASE POINT", safe=False)
+from .models import PartCategory, DocumentCategory, Part, Manufacturer, PurchaseOption, Container, Document
+from .serializers import PartCategorySerializer, DocumentCategorySerializer, PartSerializer, ManufacturerSerializer, PurchaseOptionSerializer, ContainerSerializer, DocumentSerializer
 
 class StandardResultsSetPagination(pagination.PageNumberPagination):
     page_size = 10
@@ -26,21 +19,47 @@ class PartViewSet(ModelViewSetWithPaginationAndPermissions):
     queryset = Part.objects.all()
     serializer_class = PartSerializer
     
-    @action(detail=False, methods=['post'])
-    def create_new(self, request):
-        data = request.data
-        part = Part()
+    @action(detail=True, methods=['post'])
+    def add_document(self, request, pk=None):
+        part = self.get_object()
+        document_id = request.data.get('document_id')
 
-        if 'variant' in data:
-            part.create_new_variant(**data)
-        elif 'revision' in data:
-            part.create_new_revision(**data)
-        else:
-            part.create_new_item(**data)
+        try:
+            document = Document.objects.get(id=document_id)
+            part.documents.add(document)
+            return Response({'status': 'Document added to the part'}, status=status.HTTP_200_OK)
+        except Document.DoesNotExist:
+            return Response({'error': 'Document not found'}, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = self.get_serializer(part)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    @action(detail=True, methods=['post'])
+    def remove_document(self, request, pk=None):
+        part = self.get_object()
+        document_id = request.data.get('document_id')
+
+        try:
+            document = Document.objects.get(id=document_id)
+            part.documents.remove(document)
+            return Response({'status': 'Document removed from the part'}, status=status.HTTP_200_OK)
+        except Document.DoesNotExist:
+            return Response({'error': 'Document not found'}, status=status.HTTP_404_NOT_FOUND)
     
+
+class BomViewSet(viewsets.ModelViewSet):
+    queryset = Container.objects.all()
+    serializer_class = ContainerSerializer
+
+
+    def get_queryset(self):
+        # Get all unique part_a objects from the Container model
+        return Part.objects.filter(containers_as_part_a__isnull=False).distinct()
+
+    def create(self, request, *args, **kwargs):
+        # Create a new Container tuple with the provided data
+        part_a = Part.objects.get(internal_part_number=request.data['part_a'])
+        part_b = Part.objects.get(internal_part_number=request.data['part_b'])
+        quantity = request.data['quantity']
+        container = Container.objects.create(part_a=part_a, part_b=part_b, quantity=quantity)
+        return Response({'status': 'New tuple created', 'id': container.id}, status=status.HTTP_201_CREATED)
 class PartCategoryViewSet(ModelViewSetWithPaginationAndPermissions):
     queryset = PartCategory.objects.all()
     serializer_class = PartCategorySerializer
@@ -65,6 +84,6 @@ class DocumentViewSet(ModelViewSetWithPaginationAndPermissions):
     queryset = Document.objects.all()
     serializer_class = DocumentSerializer
 
-class PartDocumentViewSet(ModelViewSetWithPaginationAndPermissions):
-    queryset = PartDocument.objects.all()
-    serializer_class = PartDocumentSerializer
+# class PartDocumentViewSet(ModelViewSetWithPaginationAndPermissions):
+#     queryset = PartDocument.objects.all()
+#     serializer_class = PartDocumentSerializer
