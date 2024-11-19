@@ -7,23 +7,26 @@ class PartCategorySerializer(serializers.HyperlinkedModelSerializer):
         fields = ['id', 'name', 'description', 'url']
         
 class DocumentSerializer(serializers.HyperlinkedModelSerializer):
-    #category = DocumentCategorySerializer()
-
     class Meta:
         model = Document
         fields = ['id', 'document_number', 'description', 'checked', 'doc_file', 'link', 'obsolete', 'category', 'item_number', 'revision', 'creation_date', 'url']
 
 class ContainerSerializer(serializers.HyperlinkedModelSerializer):
+    part_a = serializers.SlugRelatedField(slug_field='internal_part_number', queryset=Part.objects.all())
+    part_b = serializers.SlugRelatedField(slug_field='internal_part_number', queryset=Part.objects.all())
+
     class Meta:
         model = Container
-        fields = ['id', 'part_a', 'part_b', 'quantity', 'creation_date', 'url']
+        fields = ['id', 'part_a', 'part_b', 'quantity', 'creation_date']
         
 class ContainerASerializer(serializers.HyperlinkedModelSerializer):
+    part_b = serializers.SlugRelatedField(slug_field='internal_part_number', queryset=Part.objects.all())
     class Meta:
         model = Container
         fields = ['part_b', 'quantity', 'creation_date']
 
 class ContainerBSerializer(serializers.HyperlinkedModelSerializer):
+    part_a = serializers.SlugRelatedField(slug_field='internal_part_number', queryset=Part.objects.all())
     class Meta:
         model = Container
         fields = ['part_a', 'quantity', 'creation_date']

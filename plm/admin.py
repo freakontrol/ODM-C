@@ -29,7 +29,3 @@ class ContainerAdmin(admin.ModelAdmin):
 @admin.register(Document)
 class DocumentAdmin(admin.ModelAdmin):
     list_display = ('document_number', 'description', 'checked', 'category', 'obsolete')
-
-# @admin.register(PartDocument)
-# class PartDocumentAdmin(admin.ModelAdmin):
-#     list_display = ('part', 'document')

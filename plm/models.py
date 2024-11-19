@@ -6,16 +6,13 @@ class Category(models.Model):
     description = models.CharField(max_length=255, null=True, blank=True)
     class Meta:
         abstract = True
-
     def __str__(self):
         return self.name
     
 class PartCategory(Category):
-    # Add any additional fields or methods specific to PartCategory here
     pass
 
 class DocumentCategory(Category):
-    # Add any additional fields or methods specific to DocumentCategory here
     pass
 
 class Document(models.Model):
@@ -29,6 +26,9 @@ class Document(models.Model):
     item_number = models.IntegerField(null=True, blank=True)
     revision = models.CharField(max_length=255, null=True, blank=True)
     creation_date = models.DateField(auto_now_add=True)
+    
+    def __str__(self):
+        return self.document_number
 
 class Part(models.Model):
     internal_part_number = models.CharField(max_length=255, unique=True)
@@ -41,8 +41,8 @@ class Part(models.Model):
     creation_date = models.DateField(auto_now_add=True)
     category = models.ForeignKey('PartCategory', on_delete=models.SET_NULL, null=True)
     item_number = models.IntegerField(null=True, blank=True)
-    variant = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    revision = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    variant = models.IntegerField(null=True, blank=True)
+    revision = models.IntegerField(null=True, blank=True)
     related_part = models.ManyToManyField('self', through='Container')
     image = models.BinaryField(null=True, blank=True)
 
@@ -177,7 +177,9 @@ class Part(models.Model):
 class Manufacturer(models.Model):
     name = models.CharField(max_length=255, unique=True)
     contact_info = models.CharField(max_length=255, null=True, blank=True)
-    # Add any other fields you need for the Manufacturer model
+    
+    def __str__(self):
+        return self.name
 
 class PurchaseOption(models.Model):
     part_ipn = models.ForeignKey('Part', on_delete=models.CASCADE, null=True)
@@ -186,16 +188,18 @@ class PurchaseOption(models.Model):
     datasheet = models.CharField(max_length=255, null=True, blank=True)
     obsolete = models.BooleanField(default=False)
 
-
 class Container(models.Model):
     part_a = models.ForeignKey('Part', on_delete=models.CASCADE, related_name='containers_as_part_a')
     part_b = models.ForeignKey('Part', on_delete=models.CASCADE, related_name='containers_as_part_b')
     quantity = models.IntegerField()
     creation_date = models.DateField(auto_now_add=True)
-    
-    def clean(self):
-        if self.part_a.released or self.part_b.released:
-            raise ValidationError("Cannot modify container because one of the parts is released.")
 
     class Meta:
         unique_together = ('part_a', 'part_b',)
+        
+    def clean(self):
+        if self.part_a.released or self.part_b.released:
+            raise ValidationError("Cannot modify container because one of the parts is released.")
+        
+    def __str__(self):
+        return self.part_a
