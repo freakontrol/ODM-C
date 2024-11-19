@@ -18,6 +18,8 @@ class ModelViewSetWithPaginationAndPermissions(viewsets.ModelViewSet):
 class PartViewSet(ModelViewSetWithPaginationAndPermissions):
     queryset = Part.objects.all()
     serializer_class = PartSerializer
+    lookup_field = 'internal_part_number'
+
     
     @action(detail=True, methods=['post'])
     def add_document(self, request, pk=None):
@@ -83,6 +85,7 @@ class ContainerViewSet(ModelViewSetWithPaginationAndPermissions):
 class DocumentViewSet(ModelViewSetWithPaginationAndPermissions):
     queryset = Document.objects.all()
     serializer_class = DocumentSerializer
+    lookup_field = 'document_number'
 
 # class PartDocumentViewSet(ModelViewSetWithPaginationAndPermissions):
 #     queryset = PartDocument.objects.all()

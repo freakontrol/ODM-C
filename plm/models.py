@@ -43,6 +43,7 @@ class Part(models.Model):
     item_number = models.IntegerField(null=True, blank=True)
     variant = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     revision = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    related_part = models.ManyToManyField('self', through='Container')
     image = models.BinaryField(null=True, blank=True)
 
     class Meta:
@@ -198,9 +199,3 @@ class Container(models.Model):
 
     class Meta:
         unique_together = ('part_a', 'part_b',)
-
-
-
-# class PartDocument(models.Model):
-#     part = models.ForeignKey('Part', on_delete=models.CASCADE)
-#     document = models.ForeignKey('Document', on_delete=models.CASCADE)
