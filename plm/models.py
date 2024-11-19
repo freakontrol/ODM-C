@@ -34,7 +34,6 @@ class Part(models.Model):
     internal_part_number = models.CharField(max_length=255, unique=True)
     description = models.CharField(max_length=255, null=True, blank=True)
     released = models.BooleanField(default=False)
-    purchase_option = models.ForeignKey('PurchaseOption', on_delete=models.SET_NULL, null=True)
     repository_link = models.CharField(max_length=255, null=True, blank=True)
     documents = models.ManyToManyField(Document, related_name='parts')
     storage_code = models.CharField(max_length=255, null=True, blank=True)
@@ -182,7 +181,7 @@ class Manufacturer(models.Model):
         return self.name
 
 class PurchaseOption(models.Model):
-    part_ipn = models.ForeignKey('Part', on_delete=models.CASCADE, null=True)
+    part_ipn = models.ForeignKey('Part', on_delete=models.CASCADE, related_name='purchase_options', null=True)
     manufacturer = models.ForeignKey('Manufacturer', on_delete=models.SET_NULL, null=True)
     manufacturer_code = models.CharField(max_length=255, null=True, blank=True)
     datasheet = models.CharField(max_length=255, null=True, blank=True)

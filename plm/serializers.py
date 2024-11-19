@@ -30,12 +30,18 @@ class ContainerBSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Container
         fields = ['part_a', 'quantity', 'creation_date']
+        
+class PurchaseOptionSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = PurchaseOption
+        fields = ['id', 'part_ipn', 'manufacturer', 'manufacturer_code', 'datasheet', 'obsolete', 'url']
 
 class PartSerializer(serializers.HyperlinkedModelSerializer):
     documents = DocumentSerializer(many=True, read_only=True)
     
     containers_as_part_a = ContainerASerializer(many=True, read_only=True)
     containers_as_part_b = ContainerBSerializer(many=True, read_only=True)
+    purchase_options = PurchaseOptionSerializer(many=True, read_only=True)
     
     internal_part_number = serializers.CharField(max_length=255, required=False)
     item_number = serializers.IntegerField(required=False)
@@ -44,7 +50,7 @@ class PartSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Part
-        fields = ['id', 'internal_part_number', 'description', 'released', 'purchase_option', 'repository_link', 'documents', 'storage_code', 'creation_date', 'containers_as_part_a', 'containers_as_part_b', 'category', 'item_number', 'variant', 'revision', 'url']
+        fields = ['id', 'internal_part_number', 'description', 'released', 'purchase_options', 'repository_link', 'documents', 'storage_code', 'creation_date', 'containers_as_part_a', 'containers_as_part_b', 'category', 'item_number', 'variant', 'revision', 'url']
 class DocumentCategorySerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = DocumentCategory
@@ -54,8 +60,3 @@ class ManufacturerSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Manufacturer
         fields = ['id', 'name', 'contact_info', 'url']
-
-class PurchaseOptionSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = PurchaseOption
-        fields = ['id', 'part_ipn', 'manufacturer', 'manufacturer_code', 'datasheet', 'obsolete', 'url']
